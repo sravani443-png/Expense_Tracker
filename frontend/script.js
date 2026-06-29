@@ -17,6 +17,8 @@ const filterButtons = document.querySelectorAll(".filter-button");
 
 let transactions = [];
 let activeFilter = "all";
+let browserStorageMode = window.location.hostname.endsWith("github.io");
+const storageKey = "expense-tracker-transactions";
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -44,6 +46,24 @@ const setMessage = (message, tone = "neutral") => {
   messageEl.textContent = message;
   messageEl.dataset.tone = tone;
 };
+
+const getStoredTransactions = () => {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey)) || [];
+  } catch {
+    return [];
+  }
+};
+
+const saveStoredTransactions = () => {
+  localStorage.setItem(storageKey, JSON.stringify(transactions));
+};
+
+const createLocalTransaction = (payload) => ({
+  ...payload,
+  _id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  date: payload.date ? new Date(payload.date).toISOString() : new Date().toISOString(),
+});
 
 const getTotals = () =>
   transactions.reduce(
@@ -123,13 +143,22 @@ const render = () => {
 };
 
 const fetchTransactions = async () => {
+  if (browserStorageMode) {
+    transactions = getStoredTransactions();
+    render();
+    return;
+  }
+
   try {
     const response = await fetch("/api/transactions");
     if (!response.ok) throw new Error("Unable to load transactions.");
     transactions = await response.json();
     render();
   } catch (error) {
-    setMessage(error.message, "error");
+    browserStorageMode = true;
+    transactions = getStoredTransactions();
+    render();
+    setMessage("Using browser storage for this deployed version.", "neutral");
   }
 };
 
@@ -145,6 +174,17 @@ form.addEventListener("submit", async (event) => {
     type: selectedType,
     date: dateInput.value,
   };
+
+  if (browserStorageMode) {
+    transactions.unshift(createLocalTransaction(payload));
+    saveStoredTransactions();
+    form.reset();
+    dateInput.value = new Date().toISOString().split("T")[0];
+    form.querySelector('input[value="expense"]').checked = true;
+    setMessage("Transaction added successfully.", "success");
+    render();
+    return;
+  }
 
   try {
     const response = await fetch("/api/transactions", {
@@ -162,7 +202,14 @@ form.addEventListener("submit", async (event) => {
     setMessage("Transaction added successfully.", "success");
     await fetchTransactions();
   } catch (error) {
-    setMessage(error.message, "error");
+    browserStorageMode = true;
+    transactions.unshift(createLocalTransaction(payload));
+    saveStoredTransactions();
+    form.reset();
+    dateInput.value = new Date().toISOString().split("T")[0];
+    form.querySelector('input[value="expense"]').checked = true;
+    setMessage("Transaction saved in browser storage.", "success");
+    render();
   }
 });
 
@@ -170,13 +217,25 @@ transactionList.addEventListener("click", async (event) => {
   const deleteButton = event.target.closest("[data-delete]");
   if (!deleteButton) return;
 
+  if (browserStorageMode) {
+    transactions = transactions.filter((item) => item._id !== deleteButton.dataset.delete);
+    saveStoredTransactions();
+    setMessage("Transaction deleted.", "success");
+    render();
+    return;
+  }
+
   try {
     const response = await fetch(`/api/transactions/${deleteButton.dataset.delete}`, { method: "DELETE" });
     if (!response.ok) throw new Error("Could not delete transaction.");
     setMessage("Transaction deleted.", "success");
     await fetchTransactions();
   } catch (error) {
-    setMessage(error.message, "error");
+    browserStorageMode = true;
+    transactions = transactions.filter((item) => item._id !== deleteButton.dataset.delete);
+    saveStoredTransactions();
+    setMessage("Transaction deleted from browser storage.", "success");
+    render();
   }
 });
 
