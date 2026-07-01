@@ -267,7 +267,7 @@ form.addEventListener('submit', async (e) => {
     category: document.getElementById('category').value
   };
 
-  await fetch('http://localhost:5000/api/expenses', {
+  await fetch('https://expense-tracker-vmkb.onrender.com/api/expenses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(expense)
@@ -277,7 +277,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 async function loadExpenses() {
-  const res = await fetch('http://localhost:5000/api/expenses');
+  const res = await fetch('https://expense-tracker-vmkb.onrender.com/api/expenses');
   const data = await res.json();
   list.innerHTML = '';
   data.forEach(exp => {
