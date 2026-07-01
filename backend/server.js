@@ -52,7 +52,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const expenseRoutes = require('./backend/routes/expenseRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 dotenv.config();
 const app = express();
