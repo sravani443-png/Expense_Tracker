@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
+
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -145,4 +146,26 @@
 
     <script src="script.js"></script>
   </body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Expense Tracker</h1>
+  <form id="expense-form">
+    <input type="text" id="description" placeholder="Description" required>
+    <input type="number" id="amount" placeholder="Amount" required>
+    <input type="text" id="category" placeholder="Category" required>
+    <button type="submit">Add Expense</button>
+  </form>
+  <ul id="expense-list"></ul>
+  <script src="script.js"></script>
+</body>
 </html>
